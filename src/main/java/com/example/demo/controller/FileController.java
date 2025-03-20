@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -26,37 +27,30 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "*")  // ✅ Allows frontend to communicate with backend
+@CrossOrigin(origins = "*") // ✅ Allows frontend access
 public class FileController {
 
     private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
-    // ✅ File Upload API
+    // ✅ Upload File API
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File is empty!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ File is empty!");
         }
 
         try {
-            // Create upload directory if it doesn't exist
             File uploadDir = new File(UPLOAD_DIR);
-            if (!uploadDir.exists()) {
-                boolean created = uploadDir.mkdirs();
-                if (!created) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Failed to create upload directory!");
-                }
+            if (!uploadDir.exists() && !uploadDir.mkdirs()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Failed to create upload directory!");
             }
 
-            // Save file
-            File savedFile = new File(UPLOAD_DIR + file.getOriginalFilename());
-            file.transferTo(savedFile);
+            Path filePath = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
+            file.transferTo(filePath.toFile());
 
-            return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename() +
-                    "\nView at: http://localhost:8080/api/files/view/" + file.getOriginalFilename());
+            return ResponseEntity.ok("✅ File uploaded successfully: " + file.getOriginalFilename());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Failed to upload file!");
         }
     }
 
@@ -65,14 +59,14 @@ public class FileController {
     public ResponseEntity<List<String>> listFiles() {
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists() || uploadDir.list() == null) {
-            return ResponseEntity.ok(List.of("No files uploaded yet."));
+            return ResponseEntity.ok(List.of("⚠ No files uploaded yet."));
         }
 
         List<String> fileList = Arrays.asList(uploadDir.list());
         return ResponseEntity.ok(fileList);
     }
 
-    // ✅ View an Uploaded File in Browser
+    // ✅ View File in Browser (PDFs will now open properly)
     @GetMapping("/view/{filename}")
     public ResponseEntity<Resource> viewFile(@PathVariable String filename) {
         try {
@@ -83,15 +77,24 @@ public class FileController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
+            // 🔹 Detect the correct MIME type
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream"; // Default type
+            }
+
+            // ✅ PDFs will now open properly
             return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)  // Change type based on file (jpg, png, pdf, etc.)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"") // Opens in browser
                     .body(resource);
-        } catch (MalformedURLException e) {
+
+        } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // ✅ Download an Uploaded File
+    // ✅ Download File API
     @GetMapping("/download/{filename}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
         try {
@@ -117,17 +120,17 @@ public class FileController {
         File file = new File(UPLOAD_DIR + filename);
 
         if (!file.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ File not found!");
         }
 
         if (file.delete()) {
-            return ResponseEntity.ok("File deleted successfully: " + filename);
+            return ResponseEntity.ok("✅ File deleted successfully: " + filename);
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete file!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Failed to delete file!");
         }
     }
 
-    // ✅ Welcome Message for Root Path
+    // ✅ Root Endpoint: Welcome Message
     @GetMapping("/")
     public String home() {
         return """
