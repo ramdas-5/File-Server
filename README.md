@@ -1,5 +1,31 @@
 # 🚀 Java File Server (Spring Boot)
-A simple file server using **Spring Boot** that allows users to **upload, view, download, and delete files** via a web interface.
+
+## 1️⃣ Introduction  
+The **Java File Server** is a simple yet powerful web-based file management system built using **Spring Boot**. It allows users to **upload, view, download, and delete files** through a REST API and a user-friendly frontend interface. This project is ideal for learning about file handling in Java, Spring Boot APIs, and basic frontend development.
+
+---
+
+## 2️⃣ Forward  
+This project is designed to help developers understand the core concepts of **file management with Java and Spring Boot**. It provides a practical implementation of **RESTful APIs** for handling file uploads and serves as a foundation for building more complex file storage solutions.
+
+---
+
+## 3️⃣ Acknowledgement  
+I would like to extend my sincere gratitude to:
+- **Spring Boot Community** for providing excellent documentation and support.
+- **Online Resources & Open-Source Contributors** for sharing knowledge and insights.
+- **Mentors & Peers** for their guidance and feedback.
+
+---
+
+## 4️⃣ Objective  
+The main goal of this project is to:
+✅ Provide a **simple and effective** file server using Spring Boot.  
+✅ Enable users to **upload, view, download, and delete files** easily.  
+✅ Offer a user-friendly **frontend interface** for managing files.  
+✅ Help developers learn about **Spring Boot REST APIs** and **file handling in Java**.
+
+---
 
 ## 📂 Project Structure
 ```
